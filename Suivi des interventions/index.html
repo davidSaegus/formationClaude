@@ -7,6 +7,10 @@
   body { font-family: system-ui, Arial, sans-serif; margin: 2rem; color: #222; }
   h1 { font-size: 1.5rem; }
   .avertissement { background: #fff3f0; border-left: 4px solid #FF401B; padding: .6rem .8rem; }
+  .indicateurs { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+  .indicateur { border: 1px solid #ddd; border-radius: 6px; padding: .8rem 1.2rem; min-width: 9rem; }
+  .indicateur .valeur { font-size: 1.6rem; font-weight: bold; display: block; }
+  .indicateur .libelle { font-size: .8rem; color: #666; }
   table { border-collapse: collapse; margin-top: 1.5rem; width: 100%; }
   th, td { border-bottom: 1px solid #ddd; padding: .5rem; text-align: left; font-size: .9rem; }
 </style>
@@ -14,6 +18,8 @@
 <body>
   <h1>Suivi des interventions de maintenance</h1>
   <p class="avertissement">Données fictives — prototype d'atelier.</p>
+
+  <div class="indicateurs" id="indicateurs"></div>
 
   <table id="liste">
     <thead>
@@ -24,13 +30,55 @@
 
 <script>
 // Données fictives. Une ligne = une intervention.
+// statut : "ouverte" ou "résolue". delaiResolutionHeures : renseigné seulement si résolue.
 const interventions = [
-  { site: "Pylône Nord-12",  region: "Bretagne",   type: "Préventif", technicien: "K. Benali",  retard: 12 },
-  { site: "Site TNT Est-04", region: "Grand Est",  type: "Correctif", technicien: "S. Moreau",  retard: 9  },
-  { site: "Relais FM-31",    region: "Occitanie",  type: "Correctif", technicien: "T. Lemoine", retard: 7  },
-  { site: "Data center R2",  region: "Bretagne",   type: "Préventif", technicien: "N. Dubois",  retard: 4  },
-  { site: "Pylône Sud-08",   region: "PACA",       type: "Correctif", technicien: "K. Benali",  retard: 2  }
+  { site: "Pylône Nord-12",  region: "Bretagne",   type: "Préventif", technicien: "K. Benali",  statut: "ouverte", retard: 12, delaiResolutionHeures: null },
+  { site: "Site TNT Est-04", region: "Grand Est",  type: "Correctif", technicien: "S. Moreau",  statut: "ouverte", retard: 9,  delaiResolutionHeures: null },
+  { site: "Relais FM-31",    region: "Occitanie",  type: "Correctif", technicien: "T. Lemoine", statut: "ouverte", retard: 7,  delaiResolutionHeures: null },
+  { site: "Data center R2",  region: "Bretagne",   type: "Préventif", technicien: "N. Dubois",  statut: "ouverte", retard: 4,  delaiResolutionHeures: null },
+  { site: "Pylône Sud-08",   region: "PACA",       type: "Correctif", technicien: "K. Benali",  statut: "ouverte", retard: 2,  delaiResolutionHeures: null },
+  { site: "Antenne Ouest-19", region: "Bretagne",  type: "Correctif", technicien: "S. Moreau",  statut: "résolue", retard: 0,  delaiResolutionHeures: 30 },
+  { site: "Relais FM-07",    region: "Occitanie",  type: "Préventif", technicien: "T. Lemoine", statut: "résolue", retard: 0,  delaiResolutionHeures: 18 },
+  { site: "Site TNT Nord-02", region: "Grand Est", type: "Correctif", technicien: "N. Dubois",  statut: "résolue", retard: 0,  delaiResolutionHeures: 72 }
 ];
+
+// Un indicateur se recalcule toujours à partir des données (jamais une valeur figée),
+// pour rester correct une fois le filtre par région ajouté.
+function calculerIndicateurs(liste) {
+  const ouvertes = liste.filter(i => i.statut === "ouverte");
+  const resolues = liste.filter(i => i.statut === "résolue");
+  const enRetard = ouvertes.filter(i => i.retard > 0);
+  const resoluesSous48h = resolues.filter(i => i.delaiResolutionHeures <= 48);
+  const delaiMoyenHeures = resolues.length
+    ? resolues.reduce((somme, i) => somme + i.delaiResolutionHeures, 0) / resolues.length
+    : 0;
+
+  return {
+    ouvertes: ouvertes.length,
+    enRetard: enRetard.length,
+    delaiMoyenHeures: Math.round(delaiMoyenHeures),
+    resoluesSous48h: resoluesSous48h.length
+  };
+}
+
+function afficherIndicateurs(indicateurs) {
+  const zone = document.querySelector("#indicateurs");
+  const cases = [
+    { libelle: "Ouvertes", valeur: indicateurs.ouvertes },
+    { libelle: "En retard", valeur: indicateurs.enRetard },
+    { libelle: "Délai moyen (h)", valeur: indicateurs.delaiMoyenHeures },
+    { libelle: "Résolues sous 48 h", valeur: indicateurs.resoluesSous48h }
+  ];
+  zone.innerHTML = "";
+  for (const c of cases) {
+    const bloc = document.createElement("div");
+    bloc.className = "indicateur";
+    bloc.innerHTML = `<span class="valeur">${c.valeur}</span><span class="libelle">${c.libelle}</span>`;
+    zone.appendChild(bloc);
+  }
+}
+
+afficherIndicateurs(calculerIndicateurs(interventions));
 
 // Affichage simple, à faire évoluer item par item depuis le BACKLOG.md.
 const corps = document.querySelector("#liste tbody");

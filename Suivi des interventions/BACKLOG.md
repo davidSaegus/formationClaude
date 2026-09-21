@@ -6,7 +6,6 @@ Une ligne par idée. On déplace vers « En cours » puis « Fait », on ne supp
 - (rien pour l'instant)
 
 ## À faire — priorité haute
-- [ ] Les 4 indicateurs de tête : ouvertes, en retard, délai moyen, résolues sous 48 h
 - [ ] La liste des 10 interventions les plus en retard (site, type, technicien, jours de retard)
 - [ ] Le filtre par région, qui met à jour la liste ET les indicateurs
 
@@ -22,3 +21,4 @@ Une ligne par idée. On déplace vers « En cours » puis « Fait », on ne supp
 
 ## Fait
 - [x] Page de départ avec le titre et un jeu de données fictives
+- [x] Les 4 indicateurs de tête : ouvertes, en retard, délai moyen, résolues sous 48 h
