@@ -8,10 +8,6 @@ en regardant la page, sans lire le code. Une seule idée à la fois.
 
 ## Priorité 1 — l'effet immédiat
 
-- [ ] **B1 · Les 4 indicateurs en haut de page**
-  Interventions ouvertes · en retard de plus de 7 jours · retard moyen · part de correctif.
-  *Fini quand :* quatre encadrés apparaissent au-dessus du tableau, avec les bons chiffres.
-
 - [ ] **B2 · Mettre les retards en évidence**
   Plus de 10 jours en rouge, de 5 à 10 en orange, en dessous en gris.
   *Fini quand :* Pylône Nord-12 ressort en rouge, Pylône Sud-08 reste discret.
@@ -20,11 +16,6 @@ en regardant la page, sans lire le code. Une seule idée à la fois.
   *Fini quand :* la première ligne du tableau est la plus en retard, sans avoir à chercher.
 
 ## Priorité 2 — rendre la page interactive
-
-- [ ] **B4 · Filtre par région**
-  Un menu déroulant avec les régions présentes, plus une option « Toutes ».
-  *Fini quand :* choisir Bretagne ne laisse que 2 lignes — **et que les 4 indicateurs
-  se recalculent sur les lignes affichées.**
 
 - [ ] **B5 · Filtre par type, cumulable avec la région**
   *Fini quand :* Bretagne + Préventif donne exactement 2 lignes.
@@ -75,3 +66,5 @@ en regardant la page, sans lire le code. Une seule idée à la fois.
 ## Fait
 
 - [x] Page de départ : tableau brut des interventions, produite avec Claude Design
+- [x] **B1 · Les 4 indicateurs en haut de page**
+- [x] **B4 · Filtre par région**

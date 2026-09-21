@@ -7,6 +7,13 @@
   body { font-family: system-ui, Arial, sans-serif; margin: 2rem; color: #222; }
   h1 { font-size: 1.5rem; }
   .avertissement { background: #fff3f0; border-left: 4px solid #FF401B; padding: .6rem .8rem; }
+  .indicateurs { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+  .indicateur { border: 1px solid #ddd; border-radius: 6px; padding: .8rem 1.2rem; min-width: 9rem; }
+  .indicateur .valeur { font-size: 1.6rem; font-weight: bold; display: block; }
+  .indicateur .libelle { font-size: .8rem; color: #666; }
+  .filtres { margin-top: 1.5rem; }
+  .filtres label { font-size: .9rem; margin-right: .5rem; }
+  .filtres select { font-size: .9rem; padding: .3rem .5rem; }
   table { border-collapse: collapse; margin-top: 1.5rem; width: 100%; }
   th, td { border-bottom: 1px solid #ddd; padding: .5rem; text-align: left; font-size: .9rem; }
 </style>
@@ -14,6 +21,13 @@
 <body>
   <h1>Suivi des interventions de maintenance</h1>
   <p class="avertissement">Données fictives — prototype d'atelier.</p>
+
+  <div class="indicateurs" id="indicateurs"></div>
+
+  <div class="filtres">
+    <label for="filtre-region">Région</label>
+    <select id="filtre-region"></select>
+  </div>
 
   <table id="liste">
     <thead>
@@ -32,13 +46,73 @@ const interventions = [
   { site: "Pylône Sud-08",   region: "PACA",       type: "Correctif", technicien: "K. Benali",  retard: 2  }
 ];
 
-// Affichage simple, à faire évoluer item par item depuis le BACKLOG.md.
-const corps = document.querySelector("#liste tbody");
-for (const i of interventions) {
-  const ligne = document.createElement("tr");
-  ligne.innerHTML = `<td>${i.site}</td><td>${i.region}</td><td>${i.type}</td><td>${i.technicien}</td><td>${i.retard}</td>`;
-  corps.appendChild(ligne);
+// Un indicateur se recalcule toujours à partir de la liste reçue (jamais des
+// données brutes globales), pour rester correct une fois le filtre par région ajouté.
+function calculerIndicateurs(liste) {
+  const enRetard = liste.filter(i => i.retard > 7);
+  const correctifs = liste.filter(i => i.type === "Correctif");
+  const retardMoyen = liste.length
+    ? liste.reduce((somme, i) => somme + i.retard, 0) / liste.length
+    : 0;
+  const partCorrectif = liste.length ? (correctifs.length / liste.length) * 100 : 0;
+
+  return {
+    ouvertes: liste.length,
+    enRetard: enRetard.length,
+    retardMoyen: Math.round(retardMoyen * 10) / 10,
+    partCorrectif: Math.round(partCorrectif)
+  };
 }
+
+function afficherIndicateurs(indicateurs) {
+  const zone = document.querySelector("#indicateurs");
+  const cases = [
+    { libelle: "Ouvertes", valeur: indicateurs.ouvertes },
+    { libelle: "En retard (> 7 j)", valeur: indicateurs.enRetard },
+    { libelle: "Retard moyen (j)", valeur: indicateurs.retardMoyen },
+    { libelle: "Part de correctif", valeur: `${indicateurs.partCorrectif} %` }
+  ];
+  zone.innerHTML = "";
+  for (const c of cases) {
+    const bloc = document.createElement("div");
+    bloc.className = "indicateur";
+    bloc.innerHTML = `<span class="valeur">${c.valeur}</span><span class="libelle">${c.libelle}</span>`;
+    zone.appendChild(bloc);
+  }
+}
+
+function afficherListe(liste) {
+  const corps = document.querySelector("#liste tbody");
+  corps.innerHTML = "";
+  for (const i of liste) {
+    const ligne = document.createElement("tr");
+    ligne.innerHTML = `<td>${i.site}</td><td>${i.region}</td><td>${i.type}</td><td>${i.technicien}</td><td>${i.retard}</td>`;
+    corps.appendChild(ligne);
+  }
+}
+
+// Le filtre pilote l'affichage : indicateurs et tableau se recalculent
+// à chaque changement, à partir des lignes retenues (jamais de la liste brute).
+function actualiser() {
+  const regionChoisie = document.querySelector("#filtre-region").value;
+  const liste = regionChoisie === "toutes"
+    ? interventions
+    : interventions.filter(i => i.region === regionChoisie);
+
+  afficherIndicateurs(calculerIndicateurs(liste));
+  afficherListe(liste);
+}
+
+function initialiserFiltreRegion() {
+  const regions = [...new Set(interventions.map(i => i.region))].sort();
+  const select = document.querySelector("#filtre-region");
+  const options = [{ valeur: "toutes", texte: "Toutes" }, ...regions.map(r => ({ valeur: r, texte: r }))];
+  select.innerHTML = options.map(o => `<option value="${o.valeur}">${o.texte}</option>`).join("");
+  select.addEventListener("change", actualiser);
+}
+
+initialiserFiltreRegion();
+actualiser();
 </script>
 </body>
 </html>
