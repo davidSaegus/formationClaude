@@ -8,7 +8,9 @@
     --texte: #17150F; --gris: #8A867E; --gris-fonce: #6E6A62; --gris-clair: #A9A49B;
     --bordure: #E7E4DF; --fond-sourdine: #F0EEE9; --fond-page: #FAF9F7;
     --accent: #D93A1B; --accent-fonce: #B92E12; --accent-clair: #FDF0EC; --accent-bordure: #F3C9BE;
-    --vert: #9BC4A8; --orange: #E8A33D; --beige: #C9C4BA;
+    --vert: #9BC4A8; --vert-fonce: #3D6B4A; --vert-clair: #EEF6F0; --vert-bordure: #C9E2D0;
+    --orange: #E8A33D; --orange-fonce: #9C6A16; --orange-clair: #FDF3E4; --orange-bordure: #F0D9A8;
+    --beige: #C9C4BA;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: #FFFFFF; color: var(--texte); font-family: system-ui, Arial, sans-serif; font-size: 14px; }
@@ -19,6 +21,11 @@
   h1 { margin: 6px 0 0; font-size: 26px; font-weight: 600; }
   .flux { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--bordure); border-radius: 999px; padding: 6px 12px; font-size: 12px; color: #5C5850; }
   .point-rouge { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: inline-block; }
+  .alerte-sla { display: flex; align-items: center; gap: 8px; margin-top: 18px; padding: 11px 16px; background: var(--accent-clair); border-left: 3px solid var(--accent); font-size: 13px; color: var(--accent-fonce); }
+  .alerte-sla.ok { background: var(--vert-clair); border-left-color: var(--vert-fonce); color: var(--vert-fonce); }
+  .badge-engagement { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 500; border: 1px solid var(--accent-bordure); background: var(--accent-clair); color: var(--accent-fonce); }
+  .badge-engagement.risque { border-color: var(--orange-bordure); background: var(--orange-clair); color: var(--orange-fonce); }
+  .badge-engagement.ok { border-color: var(--vert-bordure); background: var(--vert-clair); color: var(--vert-fonce); }
   .filtres { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-end; padding: 18px 0 22px; border-bottom: 1px solid var(--fond-sourdine); }
   .groupe-filtre { display: flex; flex-direction: column; gap: 8px; }
   .groupe-filtre .titre { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--gris); font-weight: 500; }
@@ -49,7 +56,7 @@
   .note-graphique { margin: 8px 0 0; font-size: 12px; color: var(--gris); max-width: 62ch; }
   .tableau { margin-top: 38px; }
   .lignes { border: 1px solid var(--bordure); }
-  .entete-lignes, .ligne { display: grid; grid-template-columns: 2fr 1.2fr 1.4fr 1.1fr .8fr; gap: 16px; }
+  .entete-lignes, .ligne { display: grid; grid-template-columns: 1.8fr 1fr 1.2fr .9fr .7fr 1fr; gap: 16px; }
   .entete-lignes { padding: 11px 20px; background: var(--fond-page); border-bottom: 1px solid var(--bordure); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gris); font-weight: 500; }
   .ligne { width: 100%; text-align: left; border: none; border-bottom: 1px solid var(--fond-sourdine); background: #FFFFFF; padding: 13px 20px; align-items: center; color: var(--texte); }
   .ligne.actif { background: var(--accent-clair); }
@@ -130,6 +137,14 @@ const etat = { region: null, type: null, periode: "12 semaines", selection: null
 function nomRegion(id) { return REGIONS.find(r => r.id === id).nom; }
 function couleurRetard(j) { return j >= 10 ? "#B92E12" : j >= 5 ? "#C4781F" : "var(--gris-fonce)"; }
 
+// Engagement contractuel : une intervention doit être traitée sous 10 jours après son
+// échéance. Au-delà, c'est un manquement (Hors SLA) ; entre 7 et 10 jours, c'est imminent.
+function engagement(retard) {
+  if (retard > 10) return { texte: "Hors SLA", classe: "" };
+  if (retard >= 7) return { texte: "À risque", classe: "risque" };
+  return { texte: "Dans les temps", classe: "ok" };
+}
+
 function calculerVue() {
   const { region, type, periode, selection } = etat;
   const facteurPeriode = periode === "4 semaines" ? 0.36 : periode === "8 semaines" ? 0.7 : 1;
@@ -145,6 +160,7 @@ function calculerVue() {
   const retardMoyen = ouvertes ? filtrees.reduce((s, i) => s + i[5], 0) / ouvertes : 0;
   const correctifs = filtrees.filter(i => i[8] === "Corrective").length;
   const partCorrectif = ouvertes ? Math.round((correctifs / ouvertes) * 100) : 0;
+  const horsEngagement = filtrees.filter(i => i[5] > 10).length;
 
   let lignes = filtrees.slice().sort((a, b) => b[5] - a[5]).slice(0, 10);
 
@@ -163,7 +179,7 @@ function calculerVue() {
   const intervention = selection ? INTERVENTIONS.find(i => i[0] === selection) : null;
 
   return {
-    ouvertes, enRetard, retardMoyen, partCorrectif, lignes, barres, libellesSemaines, lignesGrille, intervention,
+    ouvertes, enRetard, retardMoyen, partCorrectif, horsEngagement, lignes, barres, libellesSemaines, lignesGrille, intervention,
     portee: (region ? nomRegion(region) : "France entière") + (type ? " · " + type : ""),
     noteGraphique: region
       ? "Le correctif reste majoritaire sur " + nomRegion(region) + " en fin de période : la bascule vers le préventif n'est pas encore engagée."
@@ -191,6 +207,10 @@ function afficher() {
         <span class="flux"><span class="point-rouge"></span>Flux temps réel</span>
       </div>
     </header>
+    <div class="alerte-sla${v.horsEngagement === 0 ? " ok" : ""}">
+      ${v.horsEngagement === 0 ? "Aucune intervention hors engagement" : v.horsEngagement + " intervention" + (v.horsEngagement > 1 ? "s" : "") + " hors engagement"}
+      <span style="color:var(--gris)">— SLA : traitement sous 10 jours après échéance</span>
+    </div>
     <div class="filtres">
       <div class="groupe-filtre">
         <span class="titre">Région</span>
@@ -247,9 +267,9 @@ function afficher() {
     <section class="tableau">
       <div class="entete-section"><h2>10 interventions les plus en retard</h2><span style="font-size:12px;color:var(--gris)">${v.porteeTableau}</span></div>
       <div class="lignes">
-        <div class="entete-lignes"><span>Site</span><span>Équipement</span><span>Technicien</span><span>Échéance</span><span style="text-align:right">Retard</span></div>
+        <div class="entete-lignes"><span>Site</span><span>Équipement</span><span>Technicien</span><span>Échéance</span><span style="text-align:right">Retard</span><span>Engagement</span></div>
         ${v.lignes.map((i, idx) => `<button type="button" class="ligne${etat.selection === i[0] ? " actif" : ""}" data-action="ouvrir" data-valeur="${i[0]}" style="${idx === v.lignes.length - 1 ? "border-bottom:none" : ""}">
-          <span><span class="site">${i[1]}</span><span class="ref">${nomRegion(i[2])} · ${i[0]}</span></span><span>${i[3]}</span><span>${i[4]}</span><span>${i[6]}</span><span class="retard-nb" style="color:${couleurRetard(i[5])}">${i[5]} j</span>
+          <span><span class="site">${i[1]}</span><span class="ref">${nomRegion(i[2])} · ${i[0]}</span></span><span>${i[3]}</span><span>${i[4]}</span><span>${i[6]}</span><span class="retard-nb" style="color:${couleurRetard(i[5])}">${i[5]} j</span><span class="badge-engagement ${engagement(i[5]).classe}">${engagement(i[5]).texte}</span>
         </button>`).join("")}
         ${v.lignes.length === 0 ? `<div class="vide">Aucune intervention en retard pour ce filtre.</div>` : ""}
       </div>

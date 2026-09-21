@@ -18,6 +18,16 @@ raccourcis ont été repris tels quels plutôt que corrigés.
 Écarté : recalculer proprement ces indicateurs dès B0 — reporté à B1, qui porte
 explicitement ce risque (« les indicateurs restent souvent figés »).
 
+## 2026-09-21 · B2 : seuils de l'engagement contractuel
+Raison : le backlog fixe le SLA à 10 jours après échéance, mais ne précise pas le seuil
+« à risque », et son exemple (« Pylône Nord-12 », « 2 interventions hors engagement »)
+correspond à un autre jeu de données que le nôtre. Seuils retenus, validés par
+l'utilisateur : Hors SLA si retard > 10 j, À risque si 7-10 j, Dans les temps sinon —
+cohérent avec le seuil « en retard » déjà utilisé par B1 (> 7 j). Sur nos données réelles,
+cela donne 4 interventions hors engagement, pas 2.
+Écarté : caler le seuil pour retomber sur « 2 » comme le backlog — aurait inventé un
+chiffre sans rapport avec la règle énoncée (10 jours).
+
 ## 2026-09-21 · Gabarit HTML compact pour tenir sous 300 lignes
 Raison : le critère de B0 impose moins de 300 lignes lisibles ; certains blocs répétitifs
 (faits du panneau de détail, historique, légendes) sont générés par une boucle sur un

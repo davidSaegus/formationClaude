@@ -14,15 +14,6 @@ Règle du jeu : un seul item à la fois, le plan d'abord, le résultat ensuite.
 
 ## Priorité 1 — rendre le tableau de bord lisible en 10 secondes
 
-### B2 · Alerte engagement contractuel
-> « Ajoute la notion d'engagement contractuel : une intervention doit être traitée sous
-> 10 jours après son échéance. Affiche en haut un bandeau d'alerte avec le nombre
-> d'interventions hors engagement, et une colonne Engagement dans le tableau avec trois
-> états : Hors SLA, À risque, Dans les temps. »
-
-**Fini quand :** le bandeau annonce « 2 interventions hors engagement », et Pylône Nord-12
-(12 jours) porte le badge Hors SLA.
-
 ---
 
 ## Priorité 2 — répondre aux questions du responsable d'exploitation
@@ -92,3 +83,5 @@ moyen de 6,5 à 5,9 jours, et la ligne sort du haut du tableau.
   filtres et panneau de détail fonctionnels
 - [x] **B1 · Quatre indicateurs en tête de page** — ouvertes, en retard (>7j), retard moyen,
   part de correctif, recalculés sur les lignes filtrées (piège corrigé, voir `LESSONS.md`)
+- [x] **B2 · Alerte engagement contractuel** — bandeau + colonne Engagement (Hors SLA/À
+  risque/Dans les temps), seuils 10j / 7-10j documentés dans `DECISIONS.md`
