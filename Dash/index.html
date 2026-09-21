@@ -2,117 +2,296 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Suivi des interventions — prototype</title>
+<title>Interventions terrain — prototype</title>
 <style>
-  body { font-family: system-ui, Arial, sans-serif; margin: 2rem; color: #222; }
-  h1 { font-size: 1.5rem; }
-  .avertissement { background: #fff3f0; border-left: 4px solid #FF401B; padding: .6rem .8rem; }
-  .indicateurs { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
-  .indicateur { border: 1px solid #ddd; border-radius: 6px; padding: .8rem 1.2rem; min-width: 9rem; }
-  .indicateur .valeur { font-size: 1.6rem; font-weight: bold; display: block; }
-  .indicateur .libelle { font-size: .8rem; color: #666; }
-  .filtres { margin-top: 1.5rem; }
-  .filtres label { font-size: .9rem; margin-right: .5rem; }
-  .filtres select { font-size: .9rem; padding: .3rem .5rem; }
-  table { border-collapse: collapse; margin-top: 1.5rem; width: 100%; }
-  th, td { border-bottom: 1px solid #ddd; padding: .5rem; text-align: left; font-size: .9rem; }
+  :root {
+    --texte: #17150F; --gris: #8A867E; --gris-fonce: #6E6A62; --gris-clair: #A9A49B;
+    --bordure: #E7E4DF; --fond-sourdine: #F0EEE9; --fond-page: #FAF9F7;
+    --accent: #D93A1B; --accent-fonce: #B92E12; --accent-clair: #FDF0EC; --accent-bordure: #F3C9BE;
+    --vert: #9BC4A8; --orange: #E8A33D; --beige: #C9C4BA;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #FFFFFF; color: var(--texte); font-family: system-ui, Arial, sans-serif; font-size: 14px; }
+  button { font-family: inherit; cursor: pointer; }
+  #app { max-width: 1400px; margin: 0 auto; padding: 28px 32px 96px; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; border-bottom: 1px solid var(--bordure); padding-bottom: 18px; }
+  .sur-titre { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--gris); font-weight: 500; }
+  h1 { margin: 6px 0 0; font-size: 26px; font-weight: 600; }
+  .flux { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--bordure); border-radius: 999px; padding: 6px 12px; font-size: 12px; color: #5C5850; }
+  .point-rouge { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: inline-block; }
+  .filtres { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-end; padding: 18px 0 22px; border-bottom: 1px solid var(--fond-sourdine); }
+  .groupe-filtre { display: flex; flex-direction: column; gap: 8px; }
+  .groupe-filtre .titre { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--gris); font-weight: 500; }
+  .puces { display: flex; flex-wrap: wrap; gap: 6px; }
+  .puce { font-size: 12px; padding: 7px 13px; border: 1px solid #D8D4CD; background: #FFFFFF; color: #3D3A34; }
+  .puce.actif { border-color: var(--accent); background: var(--accent-clair); color: var(--accent-fonce); font-weight: 500; }
+  .reinitialiser { margin-left: auto; background: none; border: none; font-size: 12px; color: var(--gris); text-decoration: underline; }
+  .indicateurs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--bordure); border: 1px solid var(--bordure); margin-top: 24px; }
+  .indicateur { background: #FFFFFF; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; }
+  .indicateur .titre { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--gris); font-weight: 500; }
+  .indicateur .valeur { font-size: 38px; font-weight: 600; line-height: 1; }
+  .indicateur .sous-titre { font-size: 12px; color: var(--gris-fonce); }
+  .corps { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 28px; margin-top: 32px; align-items: start; }
+  h2 { margin: 0; font-size: 15px; font-weight: 600; }
+  .entete-section { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .regions { display: flex; flex-direction: column; border: 1px solid var(--bordure); }
+  .ligne-region { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; text-align: left; border: none; border-bottom: 1px solid var(--fond-sourdine); border-left: 3px solid transparent; background: #FFFFFF; padding: 12px 14px; color: var(--texte); }
+  .ligne-region.actif { border-left-color: var(--accent); background: var(--accent-clair); }
+  .ligne-region .nom { font-size: 13px; font-weight: 500; }
+  .ligne-region .retard { font-size: 11px; color: var(--gris); }
+  .barre { width: 70px; height: 6px; background: var(--fond-sourdine); position: relative; overflow: hidden; }
+  .barre span { position: absolute; left: 0; top: 0; bottom: 0; }
+  .ligne-region .nb { font-size: 15px; font-weight: 600; min-width: 28px; text-align: right; }
+  .legende { display: flex; gap: 14px; font-size: 11px; color: var(--gris); padding-top: 8px; }
+  .legende span { display: inline-flex; align-items: center; gap: 6px; }
+  .puce-legende { width: 9px; height: 9px; display: inline-block; }
+  .graphique-cadre { border: 1px solid var(--bordure); padding: 18px 16px 10px; }
+  .note-graphique { margin: 8px 0 0; font-size: 12px; color: var(--gris); max-width: 62ch; }
+  .tableau { margin-top: 38px; }
+  .lignes { border: 1px solid var(--bordure); }
+  .entete-lignes, .ligne { display: grid; grid-template-columns: 2fr 1.2fr 1.4fr 1.1fr .8fr; gap: 16px; }
+  .entete-lignes { padding: 11px 20px; background: var(--fond-page); border-bottom: 1px solid var(--bordure); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gris); font-weight: 500; }
+  .ligne { width: 100%; text-align: left; border: none; border-bottom: 1px solid var(--fond-sourdine); background: #FFFFFF; padding: 13px 20px; align-items: center; color: var(--texte); }
+  .ligne.actif { background: var(--accent-clair); }
+  .ligne .site { font-weight: 500; font-size: 13px; display: block; }
+  .ligne .ref { font-size: 11px; color: var(--gris); }
+  .ligne .retard-nb { text-align: right; font-size: 13px; font-weight: 600; }
+  .vide { padding: 34px 20px; text-align: center; font-size: 13px; color: var(--gris); }
+  .rideau { position: fixed; inset: 0; z-index: 40; display: flex; justify-content: flex-end; }
+  .fond-rideau { position: absolute; inset: 0; background: rgba(23, 21, 15, .28); border: none; }
+  .panneau { position: relative; width: min(420px, 92vw); height: 100%; background: #FFFFFF; border-left: 1px solid var(--bordure); overflow-y: auto; }
+  .entete-panneau { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 22px 24px 18px; border-bottom: 1px solid var(--fond-sourdine); }
+  .entete-panneau h3 { margin: 6px 0; font-size: 19px; font-weight: 600; }
+  .fermer { background: none; border: 1px solid var(--bordure); width: 30px; height: 30px; font-size: 15px; color: var(--gris-fonce); }
+  .corps-panneau { padding: 18px 24px; display: flex; flex-direction: column; gap: 20px; }
+  .badges { display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { border: 1px solid var(--bordure); padding: 6px 11px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #5C5850; }
+  .badge.retard { background: var(--accent-clair); color: var(--accent-fonce); border-color: var(--accent-bordure); }
+  .faits { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--bordure); border: 1px solid var(--bordure); }
+  .fait { background: #FFFFFF; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .fait .cle { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--gris); }
+  .fait .val { font-size: 13px; font-weight: 500; }
+  .sous-titre-panneau { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gris); font-weight: 500; }
+  .motif { margin: 4px 0 0; font-size: 13px; line-height: 1.6; }
+  .historique-item { display: grid; grid-template-columns: 70px 1fr; gap: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--bordure); margin-top: 10px; }
+  .historique-item .date { font-size: 12px; color: var(--gris); }
+  .actions-panneau { display: flex; gap: 10px; padding-top: 4px; }
+  .actions-panneau button { flex: 1; padding: 11px 14px; font-size: 13px; font-weight: 500; }
+  .bouton-primaire { background: var(--accent); color: #FFFFFF; border: 1px solid var(--accent); }
+  .bouton-secondaire { background: #FFFFFF; color: var(--texte); border: 1px solid #D8D4CD; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--fond-sourdine); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 11px; color: var(--gris-clair); }
 </style>
 </head>
 <body>
-  <h1>Suivi des interventions de maintenance</h1>
-  <p class="avertissement">Données fictives — prototype d'atelier.</p>
-
-  <div class="indicateurs" id="indicateurs"></div>
-
-  <div class="filtres">
-    <label for="filtre-region">Région</label>
-    <select id="filtre-region"></select>
-  </div>
-
-  <table id="liste">
-    <thead>
-      <tr><th>Site</th><th>Région</th><th>Type</th><th>Technicien</th><th>Jours de retard</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
+  <div id="app"></div>
 <script>
-// Données fictives. Une ligne = une intervention.
-const interventions = [
-  { site: "Pylône Nord-12",  region: "Bretagne",   type: "Préventif", technicien: "K. Benali",  retard: 12 },
-  { site: "Site TNT Est-04", region: "Grand Est",  type: "Correctif", technicien: "S. Moreau",  retard: 9  },
-  { site: "Relais FM-31",    region: "Occitanie",  type: "Correctif", technicien: "T. Lemoine", retard: 7  },
-  { site: "Data center R2",  region: "Bretagne",   type: "Préventif", technicien: "N. Dubois",  retard: 4  },
-  { site: "Pylône Sud-08",   region: "PACA",       type: "Correctif", technicien: "K. Benali",  retard: 2  }
-];
+// Reprise de la maquette Claude Design (export illisible à l'origine, données
+// et logique cachées dans un bundle JS compressé) : même mise en page, mêmes
+// couleurs, mêmes données fictives, un seul fichier sans dépendance externe.
 
-// Un indicateur se recalcule toujours à partir de la liste reçue (jamais des
-// données brutes globales), pour rester correct une fois le filtre par région ajouté.
-function calculerIndicateurs(liste) {
-  const enRetard = liste.filter(i => i.retard > 7);
-  const correctifs = liste.filter(i => i.type === "Correctif");
-  const retardMoyen = liste.length
-    ? liste.reduce((somme, i) => somme + i.retard, 0) / liste.length
-    : 0;
-  const partCorrectif = liste.length ? (correctifs.length / liste.length) * 100 : 0;
+// --- Données fictives -------------------------------------------------
+const REGIONS = [
+  { id: "idf", nom: "Île-de-France", part: 0.22 }, { id: "hdf", nom: "Hauts-de-France", part: 0.13 },
+  { id: "ges", nom: "Grand Est", part: 0.14 }, { id: "bzh", nom: "Grand Ouest", part: 0.12 },
+  { id: "aura", nom: "Auvergne–Rhône-Alpes", part: 0.16 }, { id: "naq", nom: "Nouvelle-Aquitaine", part: 0.11 },
+  { id: "paca", nom: "Sud–PACA", part: 0.12 }
+];
+const OUVERTES_PAR_REGION = { idf: 74, hdf: 38, ges: 46, bzh: 31, aura: 58, naq: 27, paca: 43 };
+const RETARD_PAR_REGION   = { idf: 19, hdf: 6,  ges: 11, bzh: 3,  aura: 14, naq: 4,  paca: 9  };
+const TYPES = ["Pylône", "TNT", "FM", "Data center"];
+
+// Une intervention : [ref, site, région, type, technicien, jours de retard, échéance, priorité, nature, motif, équipement, domaine]
+const INTERVENTIONS = [
+  ["TDF-4182", "Pylône Romainville",        "idf",  "Pylône",      "M. Kessler",  17, "12/08", "P1", "Corrective", "Haubanage à reprendre, nacelle indisponible depuis trois semaines.", "Nacelle 30 m", "Sécurité structure"],
+  ["TDF-4207", "Centre émission Niort",     "naq",  "TNT",         "A. Ferreira", 14, "15/08", "P1", "Corrective", "Amplificateur de secours en attente de pièce constructeur.", "Ampli 2 kW", "Diffusion"],
+  ["TDF-4119", "DC Vélizy B2",              "idf",  "Data center", "S. Nguyen",   12, "17/08", "P1", "Préventive", "Créneau d'arrêt climatisation non validé par le client hébergé.", "CRAC 04", "Énergie / froid"],
+  ["TDF-4233", "Pylône Mont Salève",        "aura", "Pylône",      "L. Bertrand", 11, "18/08", "P2", "Corrective", "Accès route forestière fermé, réouverture conditionnée à la météo.", "Feux balisage", "Balisage"],
+  ["TDF-4251", "Émetteur FM Metz-Luttange", "ges",  "FM",          "C. Marchal",  9,  "20/08", "P2", "Préventive", "Contrôle annuel reporté deux fois faute de créneau d'antenne.", "Filtre FM", "Diffusion"],
+  ["TDF-4198", "Pylône Fontenay",           "idf",  "Pylône",      "M. Kessler",  8,  "21/08", "P2", "Corrective", "Coffret énergie corrodé, remplacement planifié mais non affecté.", "Coffret AC", "Énergie"],
+  ["TDF-4276", "TNT Marseille Grande Étoile","paca","TNT",         "R. Oliveira", 7,  "22/08", "P1", "Corrective", "Baisse de puissance intermittente, diagnostic en cours.", "Ampli 5 kW", "Diffusion"],
+  ["TDF-4262", "DC Lyon Vaise",             "aura", "Data center", "S. Nguyen",   6,  "23/08", "P2", "Préventive", "Test groupe électrogène décalé pour éviter une bascule en heure ouvrée.", "GE 800 kVA", "Énergie"],
+  ["TDF-4288", "Pylône Sarrebourg",         "ges",  "Pylône",      "C. Marchal",  5,  "24/08", "P3", "Préventive", "Visite structure annuelle, technicien mobilisé sur incident prioritaire.", "Structure", "Sécurité structure"],
+  ["TDF-4301", "FM Lille Bouvines",         "hdf",  "FM",          "D. Lambert",  5,  "24/08", "P2", "Corrective", "Réflectométrie à refaire après orage, matériel de mesure en tournée.", "Feeder 7/8", "Diffusion"],
+  ["TDF-4312", "Pylône Amiens Nord",        "hdf",  "Pylône",      "D. Lambert",  4,  "25/08", "P3", "Préventive", "Contrôle balisage reporté, créneau de nuit à confirmer.", "Feux balisage", "Balisage"],
+  ["TDF-4330", "TNT Rennes Saint-Pern",     "bzh",  "TNT",         "P. Guillou",  3,  "26/08", "P2", "Corrective", "Défaut de ventilation sur baie émission, pièce en transit.", "Baie TNT 3", "Diffusion"],
+  ["TDF-4344", "DC Bordeaux Mérignac",      "naq",  "Data center", "A. Ferreira", 3,  "26/08", "P3", "Préventive", "Nettoyage salle blanche à recaler avec l'exploitant.", "Salle B", "Exploitation"],
+  ["TDF-4358", "FM Nice Mont Chauve",       "paca", "FM",          "R. Oliveira", 2,  "27/08", "P3", "Préventive", "Mesure de champ annuelle, accès téléphérique en maintenance.", "Antenne FM", "Diffusion"],
+  ["TDF-4361", "Pylône Quimper",            "bzh",  "Pylône",      "P. Guillou",  1,  "28/08", "P3", "Corrective", "Porte d'enceinte forcée, remise en état à planifier.", "Clôture", "Sûreté"]
+];
+const SEMAINES_PREVENTIF = [22, 25, 19, 28, 31, 24, 27, 33, 29, 26, 30, 34];
+const SEMAINES_CORRECTIF = [14, 12, 18, 11, 16, 21, 19, 15, 23, 20, 17, 13];
+
+// --- État ---------------------------------------------------------------
+const etat = { region: null, type: null, periode: "12 semaines", selection: null };
+
+// --- Calculs (repris tels quels de la maquette : certains chiffres sont des
+// approximations fictives par région, pas des agrégats sur les lignes affichées — ce sera corrigé proprement dans B1).
+function nomRegion(id) { return REGIONS.find(r => r.id === id).nom; }
+function couleurRetard(j) { return j >= 10 ? "#B92E12" : j >= 5 ? "#C4781F" : "var(--gris-fonce)"; }
+
+function calculerVue() {
+  const { region, type, periode, selection } = etat;
+  const facteurPeriode = periode === "4 semaines" ? 0.36 : periode === "8 semaines" ? 0.7 : 1;
+  const facteurType = type ? 0.3 : 1;
+  const echelle = (region ? REGIONS.find(r => r.id === region).part : 1) * facteurType;
+  let lignes = INTERVENTIONS.filter(i => (!region || i[2] === region) && (!type || i[3] === type));
+  lignes = lignes.slice().sort((a, b) => b[5] - a[5]).slice(0, 10);
+  const ouvertes = Math.round(Object.values(OUVERTES_PAR_REGION).reduce((a, b) => a + b, 0) * echelle);
+  const enRetard = Math.round(Object.values(RETARD_PAR_REGION).reduce((a, b) => a + b, 0) * echelle);
+  const delaiMoyen = region === "idf" ? 6.4 : region === "bzh" ? 3.1 : 4.8;
+  const resolution48h = region === "idf" ? 78 : region === "bzh" ? 94 : 87;
+
+  const maxVal = 40, haut = 14, hauteurZone = 196, largeurCase = (700 - 40) / 12;
+  const y = v => haut + hauteurZone - (v / maxVal) * hauteurZone;
+  const barres = [], libellesSemaines = [];
+  for (let i = 0; i < 12; i++) {
+    const cx = 40 + largeurCase * i + largeurCase / 2;
+    const p = Math.max(1, Math.round(SEMAINES_PREVENTIF[i] * echelle * facteurPeriode));
+    const c = Math.max(1, Math.round(SEMAINES_CORRECTIF[i] * echelle * facteurPeriode));
+    barres.push({ x: cx - 17, y: y(p), largeur: 16, hauteur: haut + hauteurZone - y(p), couleur: "var(--beige)" });
+    barres.push({ x: cx + 1, y: y(c), largeur: 16, hauteur: haut + hauteurZone - y(c), couleur: "var(--accent)" });
+    libellesSemaines.push({ x: cx, texte: "S" + (i + 1) });
+  }
+  const lignesGrille = [0, 10, 20, 30, 40].map(v => ({ y: y(v), texte: String(v) }));
+  const intervention = selection ? INTERVENTIONS.find(i => i[0] === selection) : null;
 
   return {
-    ouvertes: liste.length,
-    enRetard: enRetard.length,
-    retardMoyen: Math.round(retardMoyen * 10) / 10,
-    partCorrectif: Math.round(partCorrectif)
+    ouvertes, enRetard, delaiMoyen, resolution48h, lignes, barres, libellesSemaines, lignesGrille, intervention,
+    portee: (region ? nomRegion(region) : "France entière") + (type ? " · " + type : ""),
+    noteGraphique: region
+      ? "Le correctif reste majoritaire sur " + nomRegion(region) + " en fin de période : la bascule vers le préventif n'est pas encore engagée."
+      : "Le préventif progresse de 22 à 34 interventions hebdomadaires sur la période ; le correctif reste instable au-delà de la semaine 6.",
+    porteeTableau: lignes.length + " résultats · " + (region ? nomRegion(region) : "toutes régions") + (type ? " · " + type : "")
   };
 }
 
-function afficherIndicateurs(indicateurs) {
-  const zone = document.querySelector("#indicateurs");
-  const cases = [
-    { libelle: "Ouvertes", valeur: indicateurs.ouvertes },
-    { libelle: "En retard (> 7 j)", valeur: indicateurs.enRetard },
-    { libelle: "Retard moyen (j)", valeur: indicateurs.retardMoyen },
-    { libelle: "Part de correctif", valeur: `${indicateurs.partCorrectif} %` }
-  ];
-  zone.innerHTML = "";
-  for (const c of cases) {
-    const bloc = document.createElement("div");
-    bloc.className = "indicateur";
-    bloc.innerHTML = `<span class="valeur">${c.valeur}</span><span class="libelle">${c.libelle}</span>`;
-    zone.appendChild(bloc);
-  }
+// --- Affichage ------------------------------------------------------------
+function puce(groupe, valeur, actif, texte) {
+  return `<button type="button" class="puce${actif ? " actif" : ""}" data-groupe="${groupe}" data-valeur="${valeur}">${texte}</button>`;
 }
 
-function afficherListe(liste) {
-  const corps = document.querySelector("#liste tbody");
-  corps.innerHTML = "";
-  for (const i of liste) {
-    const ligne = document.createElement("tr");
-    ligne.innerHTML = `<td>${i.site}</td><td>${i.region}</td><td>${i.type}</td><td>${i.technicien}</td><td>${i.retard}</td>`;
-    corps.appendChild(ligne);
-  }
+function afficher() {
+  const v = calculerVue();
+  const app = document.querySelector("#app");
+  app.innerHTML = `
+    <header>
+      <div>
+        <div class="sur-titre">Supervision réseau · Maintenance</div>
+        <h1>Interventions terrain</h1>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <span style="font-size:12px;color:var(--gris)">Mise à jour 21/09 · 08:40</span>
+        <span class="flux"><span class="point-rouge"></span>Flux temps réel</span>
+      </div>
+    </header>
+    <div class="filtres">
+      <div class="groupe-filtre">
+        <span class="titre">Région</span>
+        <div class="puces">${puce("region", "", !etat.region, "Toutes")}${REGIONS.map(r => puce("region", r.id, etat.region === r.id, r.nom)).join("")}</div>
+      </div>
+      <div class="groupe-filtre">
+        <span class="titre">Type d'équipement</span>
+        <div class="puces">${puce("type", "", !etat.type, "Tous")}${TYPES.map(t => puce("type", t, etat.type === t, t)).join("")}</div>
+      </div>
+      <div class="groupe-filtre">
+        <span class="titre">Période</span>
+        <div class="puces">${["4 semaines", "8 semaines", "12 semaines"].map(p => puce("periode", p, etat.periode === p, p)).join("")}</div>
+      </div>
+      <button type="button" class="reinitialiser" data-action="reinitialiser">Réinitialiser</button>
+    </div>
+    <div class="indicateurs">
+      <div class="indicateur"><span class="titre">Interventions ouvertes</span><span class="valeur">${v.ouvertes}</span><span class="sous-titre">+12 vs semaine passée</span></div>
+      <div class="indicateur"><span class="titre">En retard</span><span class="valeur" style="color:var(--accent)">${v.enRetard}</span><span class="sous-titre">${Math.round(v.enRetard / v.ouvertes * 100)} % du portefeuille</span></div>
+      <div class="indicateur"><span class="titre">Délai moyen</span><span class="valeur">${v.delaiMoyen.toFixed(1).replace(".", ",")} j</span><span class="sous-titre">objectif 4,0 j</span></div>
+      <div class="indicateur"><span class="titre">Résolution &lt; 48 h</span><span class="valeur" style="${v.resolution48h < 90 ? "color:var(--orange)" : ""}">${v.resolution48h} %</span><span class="sous-titre">objectif 90 %</span></div>
+    </div>
+    <div class="corps">
+      <section>
+        <div class="entete-section"><h2>Charge par région</h2><span style="font-size:11px;color:var(--gris)">interventions ouvertes</span></div>
+        <div class="regions">
+          ${REGIONS.map(r => {
+            const o = OUVERTES_PAR_REGION[r.id], l = RETARD_PAR_REGION[r.id];
+            const taux = l / o;
+            const couleur = taux > 0.22 ? "var(--accent)" : taux > 0.15 ? "var(--orange)" : "var(--vert)";
+            const actif = etat.region === r.id;
+            return `<button type="button" class="ligne-region${actif ? " actif" : ""}" data-groupe="region" data-valeur="${r.id}">
+              <span><span class="nom">${r.nom}</span><br><span class="retard">${l} en retard</span></span>
+              <span style="display:flex;align-items:center;gap:12px"><span class="barre"><span style="width:${Math.round(o / 74 * 100)}%;background:${couleur}"></span></span><span class="nb">${o}</span></span>
+            </button>`;
+          }).join("")}
+        </div>
+        <div class="legende"><span><span class="puce-legende" style="background:var(--vert)"></span>Nominale</span><span><span class="puce-legende" style="background:var(--orange)"></span>Tendue</span><span><span class="puce-legende" style="background:var(--accent)"></span>Critique</span></div>
+      </section>
+      <section>
+        <div class="entete-section">
+          <h2>Évolution sur 12 semaines — ${v.portee}</h2>
+          <div style="display:flex;gap:16px;font-size:11px;color:var(--gris-fonce)"><span><span class="puce-legende" style="background:var(--beige)"></span>Préventif</span><span><span class="puce-legende" style="background:var(--accent)"></span>Correctif</span></div>
+        </div>
+        <div class="graphique-cadre">
+          <svg viewBox="0 0 720 260" preserveAspectRatio="none" style="width:100%;height:260px;display:block">
+            ${v.lignesGrille.map(g => `<line x1="34" y1="${g.y}" x2="716" y2="${g.y}" stroke="var(--fond-sourdine)" stroke-width="1"></line><text x="26" y="${g.y + 3}" text-anchor="end" font-size="10" fill="var(--gris-clair)">${g.texte}</text>`).join("")}
+            ${v.barres.map(b => `<rect x="${b.x}" y="${b.y}" width="${b.largeur}" height="${b.hauteur}" fill="${b.couleur}"></rect>`).join("")}
+            ${v.libellesSemaines.map(w => `<text x="${w.x}" y="245" text-anchor="middle" font-size="10" fill="var(--gris-clair)">${w.texte}</text>`).join("")}
+          </svg>
+        </div>
+        <p class="note-graphique">${v.noteGraphique}</p>
+      </section>
+    </div>
+    <section class="tableau">
+      <div class="entete-section"><h2>10 interventions les plus en retard</h2><span style="font-size:12px;color:var(--gris)">${v.porteeTableau}</span></div>
+      <div class="lignes">
+        <div class="entete-lignes"><span>Site</span><span>Équipement</span><span>Technicien</span><span>Échéance</span><span style="text-align:right">Retard</span></div>
+        ${v.lignes.map((i, idx) => `<button type="button" class="ligne${etat.selection === i[0] ? " actif" : ""}" data-action="ouvrir" data-valeur="${i[0]}" style="${idx === v.lignes.length - 1 ? "border-bottom:none" : ""}">
+          <span><span class="site">${i[1]}</span><span class="ref">${nomRegion(i[2])} · ${i[0]}</span></span><span>${i[3]}</span><span>${i[4]}</span><span>${i[6]}</span><span class="retard-nb" style="color:${couleurRetard(i[5])}">${i[5]} j</span>
+        </button>`).join("")}
+        ${v.lignes.length === 0 ? `<div class="vide">Aucune intervention en retard pour ce filtre.</div>` : ""}
+      </div>
+    </section>
+    <footer><span>Données fictives — prototype</span><span>Maquette de travail · non contractuelle</span></footer>
+    ${v.intervention ? panneauDetail(v.intervention) : ""}
+  `;
 }
 
-// Le filtre pilote l'affichage : indicateurs et tableau se recalculent
-// à chaque changement, à partir des lignes retenues (jamais de la liste brute).
-function actualiser() {
-  const regionChoisie = document.querySelector("#filtre-region").value;
-  const liste = regionChoisie === "toutes"
-    ? interventions
-    : interventions.filter(i => i.region === regionChoisie);
-
-  afficherIndicateurs(calculerIndicateurs(liste));
-  afficherListe(liste);
+function panneauDetail(it) {
+  const faits = [["Technicien", it[4]], ["Échéance", it[6] + "/2026"], ["Équipement", it[10]], ["Domaine", it[11]],
+    ["Astreinte", it[7] === "P1" ? "Oui · 24/7" : "Non"], ["Contrat", it[3] === "Data center" ? "Hébergement" : "Diffusion"]];
+  const historique = [[it[6], "Échéance contractuelle dépassée"], ["29/08", "Relance planificateur, créneau non trouvé"], ["11/09", "Escalade responsable de zone"]];
+  return `
+    <div class="rideau">
+      <button type="button" class="fond-rideau" data-action="fermer" aria-label="Fermer"></button>
+      <aside class="panneau">
+        <div class="entete-panneau">
+          <div><div class="sur-titre">${it[0]}</div><h3>${it[1]}</h3><span style="font-size:12px;color:var(--gris-fonce)">${nomRegion(it[2])} · ${it[3]}</span></div>
+          <button type="button" class="fermer" data-action="fermer">×</button>
+        </div>
+        <div class="corps-panneau">
+          <div class="badges"><span class="badge retard">${it[5]} jours de retard</span><span class="badge">${it[8]}</span><span class="badge">Priorité ${it[7]}</span></div>
+          <div class="faits">${faits.map(([cle, val]) => `<div class="fait"><span class="cle">${cle}</span><span class="val">${val}</span></div>`).join("")}</div>
+          <div><div class="sous-titre-panneau">Motif du retard</div><p class="motif">${it[9]}</p></div>
+          <div><div class="sous-titre-panneau">Historique</div>${historique.map(([d, t]) => `<div class="historique-item"><span class="date">${d}</span><span>${t}</span></div>`).join("")}</div>
+          <div class="actions-panneau">
+            <button type="button" class="bouton-primaire">Replanifier</button>
+            <button type="button" class="bouton-secondaire">Affecter</button>
+          </div>
+        </div>
+      </aside>
+    </div>`;
 }
 
-function initialiserFiltreRegion() {
-  const regions = [...new Set(interventions.map(i => i.region))].sort();
-  const select = document.querySelector("#filtre-region");
-  const options = [{ valeur: "toutes", texte: "Toutes" }, ...regions.map(r => ({ valeur: r, texte: r }))];
-  select.innerHTML = options.map(o => `<option value="${o.valeur}">${o.texte}</option>`).join("");
-  select.addEventListener("change", actualiser);
-}
-
-initialiserFiltreRegion();
-actualiser();
+// --- Interactions (délégation : un seul écouteur, pas un par bouton) ------
+document.querySelector("#app").addEventListener("click", (e) => {
+  const cible = e.target.closest("[data-groupe], [data-action]");
+  if (!cible) return;
+  const groupe = cible.dataset.groupe, valeur = cible.dataset.valeur, action = cible.dataset.action;
+  if (groupe === "region") { etat.region = valeur || null; etat.selection = null; }
+  else if (groupe === "type") { etat.type = valeur || null; etat.selection = null; }
+  else if (groupe === "periode") etat.periode = valeur;
+  else if (action === "ouvrir") etat.selection = valeur;
+  else if (action === "fermer") etat.selection = null;
+  else if (action === "reinitialiser") { etat.region = null; etat.type = null; etat.periode = "12 semaines"; }
+  afficher();
+});
+afficher();
 </script>
 </body>
 </html>

@@ -1,70 +1,100 @@
-# BACKLOG.md — les idées, triées
+# BACKLOG.md — tableau de bord « Interventions terrain »
 
-Une ligne par idée, avec son critère de réussite : on doit pouvoir dire « c'est fait »
-en regardant la page, sans lire le code. Une seule idée à la fois.
+Une ligne = une demande métier. Chaque item porte **la phrase à taper** dans Claude Code
+et **son critère de réussite visible** : on valide en regardant l'écran, jamais en lisant le code.
+
+Règle du jeu : un seul item à la fois, le plan d'abord, le résultat ensuite.
+
+---
 
 ## En cours
 - (rien)
 
-## Priorité 1 — l'effet immédiat
+---
 
-- [ ] **B2 · Mettre les retards en évidence**
-  Plus de 10 jours en rouge, de 5 à 10 en orange, en dessous en gris.
-  *Fini quand :* Pylône Nord-12 ressort en rouge, Pylône Sud-08 reste discret.
+## Priorité 1 — rendre le tableau de bord lisible en 10 secondes
 
-- [ ] **B3 · Trier par retard décroissant**
-  *Fini quand :* la première ligne du tableau est la plus en retard, sans avoir à chercher.
+### B1 · Quatre indicateurs en tête de page
+> « Ajoute un bandeau de quatre indicateurs en haut : interventions ouvertes,
+> interventions en retard de plus de 7 jours, retard moyen en jours, part de correctif. »
 
-## Priorité 2 — rendre la page interactive
+**Fini quand :** les quatre chiffres apparaissent — et **se recalculent quand on filtre**.
+*Piège connu : les indicateurs restent souvent figés sur l'ensemble des données. Vérifier
+en choisissant une région, puis demander la correction et noter la cause dans `LESSONS.md`.*
 
-- [ ] **B5 · Filtre par type, cumulable avec la région**
-  *Fini quand :* Bretagne + Préventif donne exactement 2 lignes.
+### B2 · Alerte engagement contractuel
+> « Ajoute la notion d'engagement contractuel : une intervention doit être traitée sous
+> 10 jours après son échéance. Affiche en haut un bandeau d'alerte avec le nombre
+> d'interventions hors engagement, et une colonne Engagement dans le tableau avec trois
+> états : Hors SLA, À risque, Dans les temps. »
 
-- [ ] **B6 · Recherche libre sur le site ou le technicien**
-  *Fini quand :* taper « benali » ne laisse que ses deux interventions.
+**Fini quand :** le bandeau annonce « 2 interventions hors engagement », et Pylône Nord-12
+(12 jours) porte le badge Hors SLA.
 
-- [ ] **B7 · Détail d'une intervention au clic**
-  Un panneau à droite avec toutes les informations de la ligne.
-  *Fini quand :* un clic ouvre le panneau, un deuxième clic ou Échap le referme.
+---
 
-## Priorité 3 — des données qui tiennent la route
+## Priorité 2 — répondre aux questions du responsable d'exploitation
 
-- [ ] **B8 · Dates d'ouverture et d'échéance, retard calculé**
-  Le retard n'est plus écrit en dur : il se déduit de l'échéance et de la date du jour.
-  *Fini quand :* changer une échéance change le retard affiché.
+### B3 · Charge par technicien
+> « Ajoute un bloc « Charge par technicien » sous la charge par région : une barre par
+> technicien, avec le nombre d'interventions en cours et le nombre hors engagement. »
 
-- [ ] **B9 · Passer à 40 interventions fictives sur 7 régions**
-  *Fini quand :* le tableau se remplit et les filtres restent lisibles.
+**Fini quand :** on voit d'un coup d'œil qui est le plus chargé, et les barres suivent les filtres.
 
-- [ ] **B10 · Compteur « X interventions affichées sur Y »**
-  *Fini quand :* le compteur suit les filtres.
+### B4 · Replanifier une intervention
+> « Rends le bouton Replanifier actif dans le panneau de détail : il décale l'échéance de
+> 7 jours, recalcule le retard, referme le panneau, affiche une confirmation et met à jour
+> tout l'écran. »
 
-## Priorité 4 — présentation
+**Fini quand :** après replanification de Pylône Nord-12, l'alerte passe de 2 à 1, le retard
+moyen de 6,5 à 5,9 jours, et la ligne sort du haut du tableau.
 
-- [ ] **B11 · Habillage aux couleurs TDF**
-  Corail #FF401B en accent, en-tête sobre, typographie lisible en projection.
-  *Fini quand :* la page est présentable en comité sans commentaire.
+---
 
-- [ ] **B12 · Version mobile pour le technicien**
-  Sous 700 px, une carte par intervention plutôt qu'un tableau.
-  *Fini quand :* la page reste lisible en réduisant la fenêtre.
+## Priorité 3 — si le temps le permet
 
-- [ ] **B13 · Mode comité**
-  Un bouton qui masque les filtres et agrandit les indicateurs.
-  *Fini quand :* un clic suffit pour passer en mode projection.
+### B5 · Filtre par période
+> « Ajoute un filtre Période : 7 derniers jours, 30 derniers jours, tout. »
 
-- [ ] **B14 · Export de la sélection courante en CSV**
-  *Fini quand :* le fichier téléchargé contient exactement les lignes affichées.
+**Fini quand :** le filtre se combine avec les autres, et tout l'écran suit.
 
-## Idées à trier (pas encore arbitrées)
+### B6 · Vue comité
+> « Ajoute un bouton « Vue comité » qui masque les filtres, agrandit les indicateurs et
+> ne garde que les cinq interventions les plus en retard. »
+
+**Fini quand :** un clic suffit pour projeter l'écran en réunion.
+
+### B7 · Export de la sélection
+> « Ajoute un bouton qui exporte en CSV exactement les lignes affichées. »
+
+**Fini quand :** le fichier téléchargé correspond aux filtres en cours.
+
+### B8 · Motifs de retard
+> « Ajoute un petit classement des motifs de retard les plus fréquents sur la sélection
+> courante. »
+
+**Fini quand :** on peut dire quelle cause pèse le plus, et ça change avec les filtres.
+
+### B9 · Vue mobile du technicien
+> « Sous 700 pixels de large, remplace le tableau par une carte par intervention. »
+
+**Fini quand :** la page reste lisible en réduisant la fenêtre.
+
+---
+
+## Idées à trier (déposées, pas arbitrées)
 
 - Évolution sur 12 semaines, préventif contre correctif
-- Regroupement par technicien, avec la charge de chacun
-- Carte de France cliquable à la place du menu régions
+- Carte de France cliquable à la place du menu des régions
+- Historique des replanifications par intervention
 - Impression propre sur une page A4
+- Jeu de 40 interventions au lieu de 12
+
+---
 
 ## Fait
 
-- [x] Page de départ : tableau brut des interventions, produite avec Claude Design
-- [x] **B1 · Les 4 indicateurs en haut de page**
-- [x] **B4 · Filtre par région**
+- [x] **Maquette initiale** — tableau de bord produit avec Claude Design, exporté en HTML
+- [x] **B0 · Reprendre la maquette dans un fichier propre** — `index.html` réécrit à la main
+  (297 lignes), même mise en page, mêmes couleurs, mêmes données (15 interventions, 7 régions),
+  filtres et panneau de détail fonctionnels
