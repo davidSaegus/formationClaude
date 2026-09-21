@@ -14,14 +14,6 @@ Règle du jeu : un seul item à la fois, le plan d'abord, le résultat ensuite.
 
 ## Priorité 1 — rendre le tableau de bord lisible en 10 secondes
 
-### B1 · Quatre indicateurs en tête de page
-> « Ajoute un bandeau de quatre indicateurs en haut : interventions ouvertes,
-> interventions en retard de plus de 7 jours, retard moyen en jours, part de correctif. »
-
-**Fini quand :** les quatre chiffres apparaissent — et **se recalculent quand on filtre**.
-*Piège connu : les indicateurs restent souvent figés sur l'ensemble des données. Vérifier
-en choisissant une région, puis demander la correction et noter la cause dans `LESSONS.md`.*
-
 ### B2 · Alerte engagement contractuel
 > « Ajoute la notion d'engagement contractuel : une intervention doit être traitée sous
 > 10 jours après son échéance. Affiche en haut un bandeau d'alerte avec le nombre
@@ -98,3 +90,5 @@ moyen de 6,5 à 5,9 jours, et la ligne sort du haut du tableau.
 - [x] **B0 · Reprendre la maquette dans un fichier propre** — `index.html` réécrit à la main
   (297 lignes), même mise en page, mêmes couleurs, mêmes données (15 interventions, 7 régions),
   filtres et panneau de détail fonctionnels
+- [x] **B1 · Quatre indicateurs en tête de page** — ouvertes, en retard (>7j), retard moyen,
+  part de correctif, recalculés sur les lignes filtrées (piège corrigé, voir `LESSONS.md`)

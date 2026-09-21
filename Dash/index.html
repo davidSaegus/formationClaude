@@ -124,8 +124,9 @@ const SEMAINES_CORRECTIF = [14, 12, 18, 11, 16, 21, 19, 15, 23, 20, 17, 13];
 // --- État ---------------------------------------------------------------
 const etat = { region: null, type: null, periode: "12 semaines", selection: null };
 
-// --- Calculs (repris tels quels de la maquette : certains chiffres sont des
-// approximations fictives par région, pas des agrégats sur les lignes affichées — ce sera corrigé proprement dans B1).
+// --- Calculs ---------------------------------------------------------
+// Le graphique 12 semaines reste sur des séries fictives approximées par région
+// (aucune date par semaine dans les données) : ce sera revu si B9 ajoute plus de données.
 function nomRegion(id) { return REGIONS.find(r => r.id === id).nom; }
 function couleurRetard(j) { return j >= 10 ? "#B92E12" : j >= 5 ? "#C4781F" : "var(--gris-fonce)"; }
 
@@ -134,12 +135,18 @@ function calculerVue() {
   const facteurPeriode = periode === "4 semaines" ? 0.36 : periode === "8 semaines" ? 0.7 : 1;
   const facteurType = type ? 0.3 : 1;
   const echelle = (region ? REGIONS.find(r => r.id === region).part : 1) * facteurType;
-  let lignes = INTERVENTIONS.filter(i => (!region || i[2] === region) && (!type || i[3] === type));
-  lignes = lignes.slice().sort((a, b) => b[5] - a[5]).slice(0, 10);
-  const ouvertes = Math.round(Object.values(OUVERTES_PAR_REGION).reduce((a, b) => a + b, 0) * echelle);
-  const enRetard = Math.round(Object.values(RETARD_PAR_REGION).reduce((a, b) => a + b, 0) * echelle);
-  const delaiMoyen = region === "idf" ? 6.4 : region === "bzh" ? 3.1 : 4.8;
-  const resolution48h = region === "idf" ? 78 : region === "bzh" ? 94 : 87;
+
+  // Les 4 indicateurs se calculent sur TOUTES les lignes filtrées (région + type),
+  // avant la troncature à 10 lignes réservée au tableau — sinon ils resteraient
+  // figés ou faux dès qu'un filtre réduit la liste à moins de 10 interventions.
+  const filtrees = INTERVENTIONS.filter(i => (!region || i[2] === region) && (!type || i[3] === type));
+  const ouvertes = filtrees.length;
+  const enRetard = filtrees.filter(i => i[5] > 7).length;
+  const retardMoyen = ouvertes ? filtrees.reduce((s, i) => s + i[5], 0) / ouvertes : 0;
+  const correctifs = filtrees.filter(i => i[8] === "Corrective").length;
+  const partCorrectif = ouvertes ? Math.round((correctifs / ouvertes) * 100) : 0;
+
+  let lignes = filtrees.slice().sort((a, b) => b[5] - a[5]).slice(0, 10);
 
   const maxVal = 40, haut = 14, hauteurZone = 196, largeurCase = (700 - 40) / 12;
   const y = v => haut + hauteurZone - (v / maxVal) * hauteurZone;
@@ -156,7 +163,7 @@ function calculerVue() {
   const intervention = selection ? INTERVENTIONS.find(i => i[0] === selection) : null;
 
   return {
-    ouvertes, enRetard, delaiMoyen, resolution48h, lignes, barres, libellesSemaines, lignesGrille, intervention,
+    ouvertes, enRetard, retardMoyen, partCorrectif, lignes, barres, libellesSemaines, lignesGrille, intervention,
     portee: (region ? nomRegion(region) : "France entière") + (type ? " · " + type : ""),
     noteGraphique: region
       ? "Le correctif reste majoritaire sur " + nomRegion(region) + " en fin de période : la bascule vers le préventif n'est pas encore engagée."
@@ -200,10 +207,10 @@ function afficher() {
       <button type="button" class="reinitialiser" data-action="reinitialiser">Réinitialiser</button>
     </div>
     <div class="indicateurs">
-      <div class="indicateur"><span class="titre">Interventions ouvertes</span><span class="valeur">${v.ouvertes}</span><span class="sous-titre">+12 vs semaine passée</span></div>
-      <div class="indicateur"><span class="titre">En retard</span><span class="valeur" style="color:var(--accent)">${v.enRetard}</span><span class="sous-titre">${Math.round(v.enRetard / v.ouvertes * 100)} % du portefeuille</span></div>
-      <div class="indicateur"><span class="titre">Délai moyen</span><span class="valeur">${v.delaiMoyen.toFixed(1).replace(".", ",")} j</span><span class="sous-titre">objectif 4,0 j</span></div>
-      <div class="indicateur"><span class="titre">Résolution &lt; 48 h</span><span class="valeur" style="${v.resolution48h < 90 ? "color:var(--orange)" : ""}">${v.resolution48h} %</span><span class="sous-titre">objectif 90 %</span></div>
+      <div class="indicateur"><span class="titre">Interventions ouvertes</span><span class="valeur">${v.ouvertes}</span><span class="sous-titre">${v.portee}</span></div>
+      <div class="indicateur"><span class="titre">En retard (&gt; 7 j)</span><span class="valeur" style="color:var(--accent)">${v.enRetard}</span><span class="sous-titre">${v.ouvertes ? Math.round(v.enRetard / v.ouvertes * 100) : 0} % du portefeuille</span></div>
+      <div class="indicateur"><span class="titre">Retard moyen</span><span class="valeur">${v.retardMoyen.toFixed(1).replace(".", ",")} j</span><span class="sous-titre">objectif 4,0 j</span></div>
+      <div class="indicateur"><span class="titre">Part de correctif</span><span class="valeur">${v.partCorrectif} %</span><span class="sous-titre">sur les lignes affichées</span></div>
     </div>
     <div class="corps">
       <section>
