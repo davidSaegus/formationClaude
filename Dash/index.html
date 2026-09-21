@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Suivi des interventions — prototype</title>
+<style>
+  body { font-family: system-ui, Arial, sans-serif; margin: 2rem; color: #222; }
+  h1 { font-size: 1.5rem; }
+  .avertissement { background: #fff3f0; border-left: 4px solid #FF401B; padding: .6rem .8rem; }
+  table { border-collapse: collapse; margin-top: 1.5rem; width: 100%; }
+  th, td { border-bottom: 1px solid #ddd; padding: .5rem; text-align: left; font-size: .9rem; }
+</style>
+</head>
+<body>
+  <h1>Suivi des interventions de maintenance</h1>
+  <p class="avertissement">Données fictives — prototype d'atelier.</p>
+
+  <table id="liste">
+    <thead>
+      <tr><th>Site</th><th>Région</th><th>Type</th><th>Technicien</th><th>Jours de retard</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+// Données fictives. Une ligne = une intervention.
+const interventions = [
+  { site: "Pylône Nord-12",  region: "Bretagne",   type: "Préventif", technicien: "K. Benali",  retard: 12 },
+  { site: "Site TNT Est-04", region: "Grand Est",  type: "Correctif", technicien: "S. Moreau",  retard: 9  },
+  { site: "Relais FM-31",    region: "Occitanie",  type: "Correctif", technicien: "T. Lemoine", retard: 7  },
+  { site: "Data center R2",  region: "Bretagne",   type: "Préventif", technicien: "N. Dubois",  retard: 4  },
+  { site: "Pylône Sud-08",   region: "PACA",       type: "Correctif", technicien: "K. Benali",  retard: 2  }
+];
+
+// Affichage simple, à faire évoluer item par item depuis le BACKLOG.md.
+const corps = document.querySelector("#liste tbody");
+for (const i of interventions) {
+  const ligne = document.createElement("tr");
+  ligne.innerHTML = `<td>${i.site}</td><td>${i.region}</td><td>${i.type}</td><td>${i.technicien}</td><td>${i.retard}</td>`;
+  corps.appendChild(ligne);
+}
+</script>
+</body>
+</html>
